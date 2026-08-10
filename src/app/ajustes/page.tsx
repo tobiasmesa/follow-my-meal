@@ -19,7 +19,7 @@ export default function Ajustes() {
       const url = URL.createObjectURL(blob)
       const enlace = document.createElement('a')
       enlace.href = url
-      enlace.download = `follow-my-meal-${new Date().toISOString().slice(0, 10)}.json`
+      enlace.download = `mis-comidas-${new Date().toISOString().slice(0, 10)}.json`
       enlace.click()
       URL.revokeObjectURL(url)
     } finally {
@@ -29,58 +29,82 @@ export default function Ajustes() {
 
   return (
     <>
-      <header className="pt-6 pb-4">
-        <h1 className="text-2xl font-semibold">Ajustes</h1>
+      <header className="pt-8 pb-5">
+        <h1 className="titulo text-[32px] leading-none font-semibold">Ajustes</h1>
       </header>
 
       <div className="space-y-3">
-        <section className="rounded-xl border border-borde bg-superficie p-4">
-          <h2 className="mb-1 font-semibold">Tus datos</h2>
-          <p className="text-sm text-tenue">
-            {cantidad === null
-              ? 'Contando…'
-              : `${cantidad} ${cantidad === 1 ? 'comida registrada' : 'comidas registradas'}.`}
+        <Bloque titulo="Tus datos">
+          <p className="titulo text-2xl leading-none font-semibold tabular-nums">
+            {cantidad ?? '—'}
           </p>
-          <p className="mt-3 text-sm leading-relaxed">
-            Todo se guarda en este dispositivo, no hay servidor. Eso quiere decir que
-            nadie más puede verlo — y también que si borrás la app, se pierde.
-            Exportá cada tanto.
+          <p className="mt-1 text-[13px] text-tinta-suave">
+            {cantidad === 1 ? 'comida registrada' : 'comidas registradas'}
           </p>
+
+          <p className="mt-4 text-[15px] leading-relaxed">
+            Todo se guarda en este dispositivo, sin servidor. Nadie más puede verlo — y
+            también quiere decir que si borrás la app, se pierde.
+          </p>
+
           <button
             type="button"
             onClick={exportar}
             disabled={exportando || cantidad === 0}
-            className="mt-3 w-full rounded-lg bg-carne py-2.5 text-sm font-medium text-white disabled:opacity-50"
+            className="mt-4 w-full rounded-xl bg-acento py-3 font-medium text-white transition-opacity disabled:opacity-40 dark:text-[#241e1b]"
           >
             {exportando ? 'Exportando…' : 'Exportar todo'}
           </button>
-          <p className="mt-2 text-xs text-tenue">
-            El archivo incluye las fotos. Sirve de respaldo, para mandarle el
-            seguimiento a la nutricionista, y para mudar los datos si más adelante la
-            app pasa a tener cuenta.
+          <p className="mt-2.5 text-[13px] leading-relaxed text-tinta-suave">
+            El archivo lleva las fotos adentro. Sirve de respaldo, para mandarle el
+            seguimiento a la nutricionista, y para mudar los datos si algún día la app
+            pasa a tener cuenta.
           </p>
-        </section>
+        </Bloque>
 
-        <section className="rounded-xl border border-borde bg-superficie p-4">
-          <h2 className="mb-1 font-semibold">Instalar en el iPhone</h2>
-          <p className="text-sm leading-relaxed text-tenue">
-            En Safari, tocá el botón de compartir y elegí{' '}
-            <span className="text-foreground">Agregar a pantalla de inicio</span>. Se
-            abre como una app, sin la barra del navegador.
+        <Bloque titulo="Instalarla en el iPhone">
+          <ol className="space-y-2 text-[15px] leading-relaxed">
+            <li className="flex gap-2.5">
+              <span className="etiqueta mt-0.5 tabular-nums">1</span>
+              Abrila en Safari
+            </li>
+            <li className="flex gap-2.5">
+              <span className="etiqueta mt-0.5 tabular-nums">2</span>
+              Tocá el botón de compartir
+            </li>
+            <li className="flex gap-2.5">
+              <span className="etiqueta mt-0.5 tabular-nums">3</span>
+              Elegí «Agregar a pantalla de inicio»
+            </li>
+          </ol>
+          <p className="mt-3 text-[13px] leading-relaxed text-tinta-suave">
+            Se abre como una app, sin la barra del navegador.
           </p>
-        </section>
+        </Bloque>
 
-        <section className="rounded-xl border border-borde bg-superficie p-4">
-          <h2 className="mb-1 font-semibold">Plan cargado</h2>
-          <p className="text-sm text-tenue">
-            {PLAN.profesional} · emitido el {PLAN.emitidoEl}
+        <Bloque titulo="Plan cargado">
+          <p className="text-[15px]">{PLAN.profesional}</p>
+          <p className="mt-1 text-[13px] text-tinta-suave">
+            Emitido el {PLAN.emitidoEl}
           </p>
-          <p className="mt-2 text-xs leading-relaxed text-tenue">
-            Cuando tengas un plan nuevo, hay que actualizarlo en el código. Es un solo
+          <p className="mt-3 text-[13px] leading-relaxed text-tinta-suave">
+            Cuando tengas un plan nuevo hay que actualizarlo en el código. Es un solo
             archivo.
           </p>
-        </section>
+        </Bloque>
       </div>
     </>
+  )
+}
+
+function Bloque({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  return (
+    <section
+      className="rounded-2xl border border-borde bg-superficie p-4"
+      style={{ boxShadow: 'var(--sombra)' }}
+    >
+      <h2 className="etiqueta mb-3">{titulo}</h2>
+      {children}
+    </section>
   )
 }

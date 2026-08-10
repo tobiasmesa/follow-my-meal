@@ -11,10 +11,12 @@ import type { Registro, TipoComida } from '@/lib/types'
 /**
  * La agenda de un día: qué toca según el plan y qué se comió realmente.
  *
- * La usan tanto la pantalla de hoy como el historial, por eso recibe la fecha en
- * vez de calcularla. Los almuerzos y cenas cambian con el día de la semana; el
- * desayuno, la merienda y las colaciones son iguales todos los días.
+ * Los almuerzos y cenas cambian con el día de la semana; el desayuno, la
+ * merienda y las colaciones son iguales todos los días.
  */
+
+const COMIDAS: TipoComida[] = ['desayuno', 'almuerzo', 'merienda', 'cena', 'colacion']
+
 export function AgendaDia({ fecha }: { fecha: string }) {
   const [registros, setRegistros] = useState<Registro[] | null>(null)
   const [registrando, setRegistrando] = useState<TipoComida | null>(null)
@@ -31,16 +33,24 @@ export function AgendaDia({ fecha }: { fecha: string }) {
   const de = (tipo: TipoComida) => registros?.filter((r) => r.tipo === tipo) ?? []
 
   // Las reglas de flexibilidad se muestran donde aplican, no en una pantalla
-  // aparte: sirven justo cuando estás mirando qué comer.
+  // aparte: sirven justo cuando estás decidiendo qué comer.
   const { alternarDesayunoMerienda, intercambiarOpciones } = PLAN.observaciones
   const notaPlato = dia === 'domingo' ? undefined : intercambiarOpciones
 
   if (!registros) {
-    return <p className="py-8 text-center text-sm text-tenue">Cargando…</p>
+    return <p className="py-10 text-center text-sm text-tinta-suave">Cargando…</p>
   }
+
+  const hechas = COMIDAS.filter((tipo) => de(tipo).length > 0).length
 
   return (
     <>
+      <p className="mb-4 text-[13px] text-tinta-suave">
+        {hechas === 0
+          ? 'Todavía no registraste nada.'
+          : `${hechas} de ${COMIDAS.length} registradas.`}
+      </p>
+
       <div className="space-y-3">
         <ComidaCard
           tipo="desayuno"

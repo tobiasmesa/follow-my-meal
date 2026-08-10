@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { Plato, PuntoCategoria } from '@/components/plato'
 import { diaSemanaDe, hoy, nombreDia } from '@/lib/fecha'
 import { PLAN } from '@/lib/plan'
-import type { Categoria, ComidaDelDia, DiaSemana } from '@/lib/types'
+import type { ComidaDelDia, DiaSemana } from '@/lib/types'
 
 const DIAS: DiaSemana[] = [
   'lunes',
@@ -15,24 +16,14 @@ const DIAS: DiaSemana[] = [
   'domingo',
 ]
 
-const COLOR: Record<Categoria, string> = {
-  almidones: 'bg-almidones',
-  verduras: 'bg-verduras',
-  carne: 'bg-carne',
-  proteinas: 'bg-proteinas',
-  'proteina-vegetal': 'bg-proteina-vegetal',
-}
-
 export default function PlanPage() {
   const [dia, setDia] = useState<DiaSemana>(() => diaSemanaDe(hoy()))
 
   return (
     <>
-      <header className="pt-6 pb-4">
-        <h1 className="text-2xl font-semibold">Mi plan</h1>
-        <p className="text-sm text-tenue">
-          {PLAN.profesional} · {PLAN.emitidoEl}
-        </p>
+      <header className="pt-8 pb-5">
+        <p className="etiqueta">{PLAN.profesional}</p>
+        <h1 className="titulo mt-1 text-[32px] leading-none font-semibold">Tu plan</h1>
       </header>
 
       <div className="-mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
@@ -41,10 +32,11 @@ export default function PlanPage() {
             key={d}
             type="button"
             onClick={() => setDia(d)}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-sm ${
+            aria-pressed={d === dia}
+            className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm transition-colors ${
               d === dia
-                ? 'bg-carne text-white'
-                : 'border border-borde text-tenue'
+                ? 'bg-acento text-white dark:text-[#241e1b]'
+                : 'border border-borde text-tinta-suave'
             }`}
           >
             {nombreDia(d).slice(0, 3)}
@@ -54,47 +46,64 @@ export default function PlanPage() {
 
       <div className="space-y-3">
         <Bloque titulo="Desayuno">
-          <p className="mb-2 text-xs text-tenue">Elegí una opción de cada bloque</p>
-          {PLAN.desayuno.bloques.map((opciones, i) => (
-            <p key={i} className="text-sm leading-relaxed">
-              {opciones.join(' o ')}
-            </p>
-          ))}
-        </Bloque>
-
-        <Bloque titulo={`Almuerzo · ${nombreDia(dia)}`}>
-          <Composicion comida={PLAN.almuerzo[dia]} />
-        </Bloque>
-
-        <Bloque titulo="Merienda">
-          <p className="mb-2 text-xs text-tenue">Elegí una opción de cada bloque</p>
-          {PLAN.merienda.bloques.map((opciones, i) => (
-            <p key={i} className="text-sm leading-relaxed">
-              {opciones.join(' o ')}
-            </p>
-          ))}
-        </Bloque>
-
-        <Bloque titulo={`Cena · ${nombreDia(dia)}`}>
-          <Composicion comida={PLAN.cena[dia]} />
-        </Bloque>
-
-        <Bloque titulo="Colaciones">
-          <ul className="space-y-1 text-sm">
-            {PLAN.colaciones.map((c) => (
-              <li key={c}>{c}</li>
+          <p className="mb-2 text-[13px] text-tinta-suave">Una opción de cada bloque</p>
+          <ul className="space-y-2">
+            {PLAN.desayuno.bloques.map((opciones, i) => (
+              <li
+                key={i}
+                className="border-l-2 border-almidones/50 pl-3 text-[15px] leading-snug"
+              >
+                {opciones.join(' o ')}
+              </li>
             ))}
           </ul>
         </Bloque>
 
-        <Bloque titulo="Observaciones">
-          <ul className="space-y-2 text-sm leading-relaxed">
+        <Bloque titulo="Almuerzo" sufijo={nombreDia(dia)}>
+          <Composicion comida={PLAN.almuerzo[dia]} />
+        </Bloque>
+
+        <Bloque titulo="Merienda">
+          <p className="mb-2 text-[13px] text-tinta-suave">Una opción de cada bloque</p>
+          <ul className="space-y-2">
+            {PLAN.merienda.bloques.map((opciones, i) => (
+              <li
+                key={i}
+                className="border-l-2 border-almidones/50 pl-3 text-[15px] leading-snug"
+              >
+                {opciones.join(' o ')}
+              </li>
+            ))}
+          </ul>
+        </Bloque>
+
+        <Bloque titulo="Cena" sufijo={nombreDia(dia)}>
+          <Composicion comida={PLAN.cena[dia]} />
+        </Bloque>
+
+        <Bloque titulo="Colaciones">
+          <ul className="flex flex-wrap gap-1.5">
+            {PLAN.colaciones.map((c) => (
+              <li
+                key={c}
+                className="rounded-full bg-superficie-alta px-2.5 py-1 text-[13px]"
+              >
+                {c}
+              </li>
+            ))}
+          </ul>
+        </Bloque>
+
+        <Bloque titulo="Cómo usarlo">
+          <ul className="space-y-2.5 text-[15px] leading-relaxed">
             <li>{PLAN.observaciones.alternarDesayunoMerienda}</li>
             <li>{PLAN.observaciones.intercambiarOpciones}</li>
-            <li className="font-medium">{PLAN.observaciones.proporcionIdeal}</li>
           </ul>
-          <p className="mt-3 text-xs text-tenue">
-            Condimentos libres: {PLAN.condimentosLibres.join(', ').toLowerCase()}.
+          <p className="titulo mt-4 border-t border-borde pt-3 text-lg leading-snug">
+            {PLAN.observaciones.proporcionIdeal}
+          </p>
+          <p className="mt-3 text-[13px] leading-relaxed text-tinta-suave">
+            Condimentá libre con {PLAN.condimentosLibres.join(', ').toLowerCase()}.
           </p>
         </Bloque>
       </div>
@@ -102,10 +111,24 @@ export default function PlanPage() {
   )
 }
 
-function Bloque({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+function Bloque({
+  titulo,
+  sufijo,
+  children,
+}: {
+  titulo: string
+  sufijo?: string
+  children: React.ReactNode
+}) {
   return (
-    <section className="rounded-xl border border-borde bg-superficie p-4">
-      <h2 className="mb-2 font-semibold">{titulo}</h2>
+    <section
+      className="rounded-2xl border border-borde bg-superficie p-4"
+      style={{ boxShadow: 'var(--sombra)' }}
+    >
+      <h2 className="etiqueta mb-3">
+        {titulo}
+        {sufijo && <span className="ml-1.5 opacity-60">· {sufijo}</span>}
+      </h2>
       {children}
     </section>
   )
@@ -113,37 +136,35 @@ function Bloque({ titulo, children }: { titulo: string; children: React.ReactNod
 
 function Composicion({ comida }: { comida: ComidaDelDia }) {
   return (
-    <>
-      <ul className="space-y-2.5">
-        {comida.componentes.map((componente, i) => (
-          <li key={i} className="flex gap-2.5">
-            <span
-              aria-hidden
-              className={`mt-1 h-4 w-1 shrink-0 rounded-full ${COLOR[componente.categoria]}`}
-            />
-            <div className="min-w-0">
-              <p className="text-sm font-medium">
-                {componente.porcion}
-                {componente.nota && (
-                  <span className="ml-1.5 text-xs font-normal text-carne">
-                    {componente.nota}
-                  </span>
-                )}
-              </p>
-              <p className="mt-0.5 text-xs leading-relaxed text-tenue">
-                {componente.opciones.join(' · ')}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ul>
-      {(comida.fruta || comida.bebida) && (
-        <p className="mt-2.5 text-xs text-tenue">
-          {[comida.fruta && '+ 1 fruta', comida.bebida && '1 vaso de agua']
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
-      )}
-    </>
+    <div className="flex gap-4">
+      <Plato componentes={comida.componentes} tamano={80} />
+      <div className="min-w-0 flex-1">
+        <ul className="space-y-2.5">
+          {comida.componentes.map((componente, i) => (
+            <li key={i} className="flex gap-2.5">
+              <PuntoCategoria categoria={componente.categoria} />
+              <div className="min-w-0">
+                <p className="text-[15px] leading-snug">
+                  {componente.porcion}
+                  {componente.nota && (
+                    <span className="ml-1.5 text-xs text-acento">{componente.nota}</span>
+                  )}
+                </p>
+                <p className="mt-0.5 text-[13px] leading-relaxed text-tinta-suave">
+                  {componente.opciones.join(' · ')}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+        {(comida.fruta || comida.bebida) && (
+          <p className="mt-2.5 text-[13px] text-tinta-suave">
+            {[comida.fruta && '+ 1 fruta', comida.bebida && '1 vaso de agua']
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+        )}
+      </div>
+    </div>
   )
 }

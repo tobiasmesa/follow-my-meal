@@ -8,13 +8,12 @@ import { usePathname } from 'next/navigation'
  *
  * En modo standalone iOS no muestra el botón de atrás de Safari, así que la
  * navegación tiene que bastarse sola. El `padding-bottom` con `safe-area-inset`
- * es lo que evita que los botones queden debajo de la barra de gestos del
- * iPhone.
+ * es lo que evita que los botones queden debajo de la barra de gestos.
  */
 
 const SECCIONES = [
   { href: '/', etiqueta: 'Hoy', icono: PlatoIcono },
-  { href: '/plan', etiqueta: 'Mi plan', icono: ListaIcono },
+  { href: '/plan', etiqueta: 'Plan', icono: ListaIcono },
   { href: '/historial', etiqueta: 'Historial', icono: RelojIcono },
   { href: '/ajustes', etiqueta: 'Ajustes', icono: EngranajeIcono },
 ]
@@ -24,7 +23,7 @@ export function Nav() {
 
   return (
     <nav
-      className="sticky bottom-0 z-10 border-t border-borde bg-background/90 backdrop-blur"
+      className="sticky bottom-0 z-10 border-t border-borde bg-fondo/85 backdrop-blur-md"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <ul className="mx-auto flex max-w-md">
@@ -35,11 +34,11 @@ export function Nav() {
               <Link
                 href={href}
                 aria-current={activa ? 'page' : undefined}
-                className={`flex flex-col items-center gap-1 py-2 text-[11px] transition-colors ${
-                  activa ? 'text-carne' : 'text-tenue'
+                className={`flex flex-col items-center gap-1 pt-2.5 pb-2 text-[11px] tracking-wide transition-colors ${
+                  activa ? 'text-acento' : 'text-tinta-suave'
                 }`}
               >
-                <Icono />
+                <Icono activa={activa} />
                 {etiqueta}
               </Link>
             </li>
@@ -50,49 +49,50 @@ export function Nav() {
   )
 }
 
-const props = {
-  width: 22,
-  height: 22,
+type IconoProps = { activa?: boolean }
+
+const base = {
+  width: 21,
+  height: 21,
   viewBox: '0 0 24 24',
   fill: 'none',
   stroke: 'currentColor',
-  strokeWidth: 1.8,
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
   'aria-hidden': true,
 }
 
-function PlatoIcono() {
+function PlatoIcono({ activa }: IconoProps) {
   return (
-    <svg {...props}>
+    <svg {...base} strokeWidth={activa ? 2.1 : 1.7}>
       <circle cx="12" cy="12" r="8.5" />
-      <circle cx="12" cy="12" r="4" />
+      <circle cx="12" cy="12" r="3.4" fill={activa ? 'currentColor' : 'none'} />
     </svg>
   )
 }
 
-function ListaIcono() {
+function ListaIcono({ activa }: IconoProps) {
   return (
-    <svg {...props}>
-      <path d="M8 6h12M8 12h12M8 18h12M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
+    <svg {...base} strokeWidth={activa ? 2.1 : 1.7}>
+      <path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" />
     </svg>
   )
 }
 
-function RelojIcono() {
+function RelojIcono({ activa }: IconoProps) {
   return (
-    <svg {...props}>
+    <svg {...base} strokeWidth={activa ? 2.1 : 1.7}>
       <circle cx="12" cy="12" r="8.5" />
       <path d="M12 7.5V12l3 1.8" />
     </svg>
   )
 }
 
-function EngranajeIcono() {
+function EngranajeIcono({ activa }: IconoProps) {
   return (
-    <svg {...props}>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
+    <svg {...base} strokeWidth={activa ? 2.1 : 1.7}>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6M18.7 18.7l-1.6-1.6M6.9 6.9 5.3 5.3" />
     </svg>
   )
 }

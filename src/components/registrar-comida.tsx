@@ -7,11 +7,11 @@ import { PLAN } from '@/lib/plan'
 import type { TipoComida } from '@/lib/types'
 
 const TITULOS: Record<TipoComida, string> = {
-  desayuno: 'Registrar desayuno',
-  almuerzo: 'Registrar almuerzo',
-  merienda: 'Registrar merienda',
-  cena: 'Registrar cena',
-  colacion: 'Registrar colación',
+  desayuno: 'Desayuno',
+  almuerzo: 'Almuerzo',
+  merienda: 'Merienda',
+  cena: 'Cena',
+  colacion: 'Colación',
 }
 
 export function RegistrarComida({
@@ -38,6 +38,14 @@ export function RegistrarComida({
       if (vistaPrevia) liberarUrl(vistaPrevia)
     }
   }, [vistaPrevia])
+
+  // En modo standalone no hay botón de atrás, así que Escape es la única salida
+  // por teclado cuando se usa desde la computadora.
+  useEffect(() => {
+    const alTeclear = (e: KeyboardEvent) => e.key === 'Escape' && onCerrar()
+    window.addEventListener('keydown', alTeclear)
+    return () => window.removeEventListener('keydown', alTeclear)
+  }, [onCerrar])
 
   async function elegirFoto(archivo: File) {
     setError(null)
@@ -73,38 +81,38 @@ export function RegistrarComida({
   }
 
   return (
-    <div className="fixed inset-0 z-20 flex flex-col justify-end bg-black/40">
-      <button
-        type="button"
-        aria-label="Cerrar"
-        className="flex-1"
-        onClick={onCerrar}
-      />
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Registrar ${TITULOS[tipo].toLowerCase()}`}
+      className="fixed inset-0 z-20 flex flex-col justify-end bg-black/35 backdrop-blur-[2px]"
+    >
+      <button type="button" aria-label="Cerrar" className="flex-1" onClick={onCerrar} />
+
       <div
-        className="rounded-t-2xl border-t border-borde bg-background p-4"
+        className="rounded-t-3xl border-t border-borde bg-superficie px-4 pt-3 pb-4"
         style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
       >
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold">{TITULOS[tipo]}</h2>
-          <button
-            type="button"
-            onClick={onCerrar}
-            className="text-sm text-tenue"
-          >
+        <div aria-hidden className="mx-auto mb-4 h-1 w-9 rounded-full bg-borde" />
+
+        <div className="mb-4 flex items-baseline justify-between">
+          <h2 className="titulo text-xl font-semibold">{TITULOS[tipo]}</h2>
+          <button type="button" onClick={onCerrar} className="text-sm text-tinta-suave">
             Cancelar
           </button>
         </div>
 
-        <label className="mb-1 block text-sm text-tenue" htmlFor="descripcion">
-          ¿Qué comiste?
+        <label className="etiqueta mb-1.5 block" htmlFor="descripcion">
+          Qué comiste
         </label>
         <textarea
           id="descripcion"
           value={descripcion}
           onChange={(e) => setDescripcion(e.target.value)}
           rows={2}
+          autoFocus
           placeholder="Arroz integral con pollo y ensalada"
-          className="mb-3 w-full resize-none rounded-lg border border-borde bg-superficie px-3 py-2 outline-none focus:border-carne"
+          className="mb-3 w-full resize-none rounded-xl border border-borde bg-superficie-alta px-3.5 py-2.5 leading-snug outline-none placeholder:text-tinta-suave/60 focus:border-acento"
         />
 
         <input
@@ -119,37 +127,52 @@ export function RegistrarComida({
           }}
         />
 
-        <div className="mb-3 flex items-center gap-3">
-          {vistaPrevia && (
+        <button
+          type="button"
+          onClick={() => inputFoto.current?.click()}
+          disabled={procesando}
+          className="mb-3 flex w-full items-center gap-3 rounded-xl border border-dashed border-borde px-3 py-2.5 text-left transition-colors hover:border-acento disabled:opacity-50"
+        >
+          {vistaPrevia ? (
             // Blob local en memoria; next/image no aplica.
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={vistaPrevia}
               alt="Foto de la comida"
-              className="h-20 w-20 rounded-lg object-cover"
+              className="size-14 rounded-lg object-cover"
             />
+          ) : (
+            <span className="flex size-14 items-center justify-center rounded-lg bg-superficie-alta text-tinta-suave">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.2a2 2 0 0 0 1.7-.9l.6-1a1.5 1.5 0 0 1 1.3-.7h3.4a1.5 1.5 0 0 1 1.3.7l.6 1a2 2 0 0 0 1.7.9h1.2A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                />
+                <circle cx="12" cy="13" r="3.6" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
+            </span>
           )}
-          <button
-            type="button"
-            onClick={() => inputFoto.current?.click()}
-            disabled={procesando}
-            className="rounded-lg border border-borde px-3 py-2 text-sm disabled:opacity-50"
-          >
-            {procesando ? 'Procesando…' : vistaPrevia ? 'Cambiar foto' : '📷 Sacar foto'}
-          </button>
-        </div>
+          <span className="text-sm">
+            {procesando
+              ? 'Procesando…'
+              : vistaPrevia
+                ? 'Cambiar la foto'
+                : 'Sacar una foto'}
+          </span>
+        </button>
 
-        <p className="mb-3 text-xs text-tenue">
-          Condimentos libres: {PLAN.condimentosLibres.join(', ').toLowerCase()}.
+        <p className="mb-4 text-xs leading-relaxed text-tinta-suave">
+          Podés condimentar libre con {PLAN.condimentosLibres.join(', ').toLowerCase()}.
         </p>
 
-        {error && <p className="mb-3 text-sm text-carne">{error}</p>}
+        {error && <p className="mb-3 text-sm text-acento">{error}</p>}
 
         <button
           type="button"
           onClick={guardar}
           disabled={guardando}
-          className="w-full rounded-lg bg-carne py-3 font-medium text-white disabled:opacity-60"
+          className="w-full rounded-xl bg-acento py-3.5 font-medium text-white transition-opacity disabled:opacity-60 dark:text-[#241e1b]"
         >
           {guardando ? 'Guardando…' : 'Guardar'}
         </button>

@@ -70,6 +70,24 @@ salud identificables no quedan en el repositorio.
 Las sugerencias (`src/lib/sugerencias.ts`) salen de combinar una opción de cada
 componente. Tampoco necesitan IA: el plan ya trae las listas, sugerir es combinar.
 
+## El plato es el elemento visual, no la decoración
+
+La nutricionista dibuja cada comida como un anillo con arcos de colores según las
+proporciones. La app usa el mismo lenguaje: `src/components/plato.tsx` genera ese
+anillo desde los datos, y `src/lib/proporciones.ts` traduce las porciones a arcos.
+
+Las porciones que traen la fracción escrita ("1/2 plato de almidones") la usan tal
+cual; las que no ("1 porción de carne magra chica") se reparten lo que sobra, que
+es lo mismo que hace ella en el papel. Los colores de grupo (`--almidones`,
+`--verduras`, `--carne`, `--proteinas`, `--vegetal`) salen de su diagrama y están
+en `globals.css`, expuestos a Tailwind por el bloque `@theme`. El bordó
+(`--acento`) es el único acento de interfaz y conviene no repartirlo por todos
+lados.
+
+Los neutros llevan un sesgo cálido hacia el ocre a propósito: un gris puro al
+lado de esta paleta se ve apagado. Fraunces para títulos, Karla para todo lo
+demás.
+
 ## Cosas que se rompen si no se saben
 
 **Fechas.** Todo pasa por `src/lib/fecha.ts`. Nunca usar `toISOString()` para

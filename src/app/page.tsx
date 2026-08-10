@@ -16,24 +16,24 @@ export default function Hoy() {
 
   return (
     <>
-      <header className="pt-6 pb-4">
-        <h1 className="text-2xl font-semibold">Hoy</h1>
-        {fecha && (
-          <p className="text-sm text-tenue">
-            {nombreDia(diaSemanaDe(fecha))}
-            {' · '}
-            {new Date(fecha + 'T00:00:00').toLocaleDateString('es-AR', {
-              day: 'numeric',
-              month: 'long',
-            })}
-          </p>
-        )}
+      <header className="pt-8 pb-5">
+        <p className="etiqueta">
+          {fecha
+            ? new Date(fecha + 'T00:00:00').toLocaleDateString('es-AR', {
+                day: 'numeric',
+                month: 'long',
+              })
+            : ' '}
+        </p>
+        <h1 className="titulo mt-1 text-[32px] leading-none font-semibold">
+          {fecha ? nombreDia(diaSemanaDe(fecha)) : ' '}
+        </h1>
       </header>
 
       {fecha ? (
         <AgendaDia fecha={fecha} />
       ) : (
-        <p className="py-8 text-center text-sm text-tenue">Cargando…</p>
+        <p className="py-10 text-center text-sm text-tinta-suave">Cargando…</p>
       )}
     </>
   )

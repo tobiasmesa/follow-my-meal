@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { FotoGuardada } from './foto-guardada'
+import { Plato, PuntoCategoria } from './plato'
 import { borrarRegistro } from '@/lib/db'
 import {
   sugerenciaATexto,
@@ -9,7 +10,7 @@ import {
   sugerirPlato,
   type Sugerencia,
 } from '@/lib/sugerencias'
-import type { Categoria, ComidaDelDia, ComidaFija, Registro, TipoComida } from '@/lib/types'
+import type { ComidaDelDia, ComidaFija, Registro, TipoComida } from '@/lib/types'
 
 const TITULOS: Record<TipoComida, string> = {
   desayuno: 'Desayuno',
@@ -17,15 +18,6 @@ const TITULOS: Record<TipoComida, string> = {
   merienda: 'Merienda',
   cena: 'Cena',
   colacion: 'Colación',
-}
-
-/** El color viene del grupo de alimento, igual que en el plan impreso. */
-const COLOR: Record<Categoria, string> = {
-  almidones: 'bg-almidones',
-  verduras: 'bg-verduras',
-  carne: 'bg-carne',
-  proteinas: 'bg-proteinas',
-  'proteina-vegetal': 'bg-proteina-vegetal',
 }
 
 type Contenido =
@@ -70,39 +62,59 @@ export function ComidaCard({
   }
 
   return (
-    <section className="rounded-xl border border-borde bg-superficie p-4">
-      <header className="mb-3 flex items-center justify-between">
-        <h2 className="font-semibold">{TITULOS[tipo]}</h2>
-        <span className={`text-xs ${registrada ? 'text-verduras' : 'text-tenue'}`}>
-          {registrada ? '✓ registrado' : 'pendiente'}
-        </span>
-      </header>
+    <section
+      className="overflow-hidden rounded-2xl border border-borde bg-superficie"
+      style={{ boxShadow: 'var(--sombra)' }}
+    >
+      <div className="p-4">
+        <header className="mb-3 flex items-center justify-between">
+          <h2 className="etiqueta">{TITULOS[tipo]}</h2>
+          {registrada && (
+            <span className="flex items-center gap-1 rounded-full bg-acento-tenue px-2 py-0.5 text-[11px] text-acento">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="m5 12.5 4.5 4.5L19 7"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {registros.length > 1 ? `${registros.length} registros` : 'Registrado'}
+            </span>
+          )}
+        </header>
 
-      {contenido.clase === 'plato' && <Plato comida={contenido.comida} />}
-      {contenido.clase === 'bloques' && <Bloques comida={contenido.comida} />}
-      {contenido.clase === 'opciones' && <Opciones opciones={contenido.opciones} />}
+        {contenido.clase === 'plato' && <PlatoDelDia comida={contenido.comida} />}
+        {contenido.clase === 'bloques' && <Bloques comida={contenido.comida} />}
+        {contenido.clase === 'opciones' && <Opciones opciones={contenido.opciones} />}
 
-      {nota && <p className="mt-3 text-xs leading-relaxed text-tenue">{nota}</p>}
+        {nota && (
+          <p className="mt-3 border-l-2 border-borde pl-3 text-[13px] leading-relaxed text-tinta-suave">
+            {nota}
+          </p>
+        )}
 
-      {sugerencia && (
-        <p className="mt-3 rounded-lg bg-background px-3 py-2 text-sm">
-          <span className="text-tenue">Probá con: </span>
-          {sugerenciaATexto(sugerencia)}
-        </p>
-      )}
+        {sugerencia && (
+          <p className="mt-3 rounded-xl bg-superficie-alta px-3.5 py-2.5 text-[13px] leading-relaxed">
+            <span className="etiqueta mr-1.5">Probá</span>
+            {sugerenciaATexto(sugerencia)}
+          </p>
+        )}
+      </div>
 
       {registros.length > 0 && (
-        <ul className="mt-3 space-y-2 border-t border-borde pt-3">
+        <ul className="border-t border-borde">
           {registros.map((registro) => (
-            <li key={registro.id} className="flex items-start gap-3">
+            <li key={registro.id} className="flex items-start gap-3 px-4 py-3">
               {registro.fotoId && (
                 <FotoGuardada fotoId={registro.fotoId} alt={registro.descripcion} />
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-sm break-words">
+                <p className="text-[15px] leading-snug break-words">
                   {registro.descripcion || 'Sin descripción'}
                 </p>
-                <p className="mt-0.5 text-xs text-tenue">
+                <p className="mt-1 text-xs text-tinta-suave tabular-nums">
                   {new Date(registro.creadoEn).toLocaleTimeString('es-AR', {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -111,85 +123,93 @@ export function ComidaCard({
               </div>
               <button
                 type="button"
-                aria-label="Borrar registro"
+                aria-label={`Borrar ${registro.descripcion || 'registro'}`}
                 onClick={async () => {
                   await borrarRegistro(registro.id)
                   onCambio()
                 }}
-                className="p-1 text-xs text-tenue"
+                className="-m-1 p-1 text-tinta-suave transition-colors hover:text-acento"
               >
-                Borrar
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M5 7h14M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </button>
             </li>
           ))}
         </ul>
       )}
 
-      <div className="mt-3 flex gap-2">
+      <div className="flex border-t border-borde">
         <button
           type="button"
           onClick={sugerir}
-          className="flex-1 rounded-lg border border-borde py-2 text-sm"
+          className="flex-1 py-3 text-sm text-tinta-suave transition-colors hover:bg-superficie-alta"
         >
           Sugerir
         </button>
         <button
           type="button"
           onClick={onRegistrar}
-          className="flex-1 rounded-lg bg-carne py-2 text-sm font-medium text-white"
+          className="flex-1 border-l border-borde py-3 text-sm font-medium text-acento transition-colors hover:bg-acento-tenue"
         >
-          Registrar
+          {registrada ? 'Sumar otro' : 'Registrar'}
         </button>
       </div>
     </section>
   )
 }
 
-function Plato({ comida }: { comida: ComidaDelDia }) {
+function PlatoDelDia({ comida }: { comida: ComidaDelDia }) {
   return (
-    <>
-      <ul className="space-y-2">
-        {comida.componentes.map((componente, i) => (
-          <li key={i} className="flex gap-2.5">
-            <span
-              aria-hidden
-              className={`mt-1 h-4 w-1 shrink-0 rounded-full ${COLOR[componente.categoria]}`}
-            />
-            <details className="min-w-0 flex-1">
-              <summary className="cursor-pointer list-none text-sm">
-                <span className="font-medium">{componente.porcion}</span>
-                {componente.nota && (
-                  <span className="ml-1.5 text-xs text-carne">{componente.nota}</span>
-                )}
-                <span className="ml-1.5 text-xs text-tenue">
-                  ({componente.opciones.length} opciones)
-                </span>
-              </summary>
-              <p className="mt-1 text-xs leading-relaxed text-tenue">
-                {componente.opciones.join(' · ')}
-              </p>
-            </details>
-          </li>
-        ))}
-      </ul>
-      {(comida.fruta || comida.bebida) && (
-        <p className="mt-2 text-xs text-tenue">
-          {[comida.fruta && '+ 1 fruta', comida.bebida && '1 vaso de agua']
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
-      )}
-    </>
+    <div className="flex gap-4">
+      <Plato componentes={comida.componentes} tamano={72} />
+      <div className="min-w-0 flex-1">
+        <ul className="space-y-1.5">
+          {comida.componentes.map((componente, i) => (
+            <li key={i} className="flex gap-2.5">
+              <PuntoCategoria categoria={componente.categoria} />
+              <details className="min-w-0 flex-1">
+                <summary className="cursor-pointer list-none text-[15px] leading-snug">
+                  {componente.porcion}
+                  {componente.nota && (
+                    <span className="ml-1.5 text-xs text-acento">{componente.nota}</span>
+                  )}
+                </summary>
+                <p className="mt-1 text-[13px] leading-relaxed text-tinta-suave">
+                  {componente.opciones.join(' · ')}
+                </p>
+              </details>
+            </li>
+          ))}
+        </ul>
+        {(comida.fruta || comida.bebida) && (
+          <p className="mt-2 text-[13px] text-tinta-suave">
+            {[comida.fruta && '+ 1 fruta', comida.bebida && '1 vaso de agua']
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+        )}
+      </div>
+    </div>
   )
 }
 
 function Bloques({ comida }: { comida: ComidaFija }) {
   return (
     <>
-      <p className="mb-2 text-xs text-tenue">Elegí una opción de cada bloque</p>
-      <ul className="space-y-1.5">
+      <p className="mb-2 text-[13px] text-tinta-suave">Una opción de cada bloque</p>
+      <ul className="space-y-2">
         {comida.bloques.map((opciones, i) => (
-          <li key={i} className="text-sm leading-relaxed">
+          <li
+            key={i}
+            className="border-l-2 border-almidones/50 pl-3 text-[15px] leading-snug"
+          >
             {opciones.join(' o ')}
           </li>
         ))}
@@ -200,9 +220,12 @@ function Bloques({ comida }: { comida: ComidaFija }) {
 
 function Opciones({ opciones }: { opciones: string[] }) {
   return (
-    <ul className="space-y-1.5">
+    <ul className="flex flex-wrap gap-1.5">
       {opciones.map((opcion) => (
-        <li key={opcion} className="text-sm">
+        <li
+          key={opcion}
+          className="rounded-full bg-superficie-alta px-2.5 py-1 text-[13px]"
+        >
           {opcion}
         </li>
       ))}

@@ -31,7 +31,7 @@ export function FotoGuardada({ fotoId, alt }: { fotoId: string; alt: string }) {
     }
   }, [fotoId])
 
-  if (!url) return <div className="h-20 w-20 shrink-0 rounded-lg bg-superficie" />
+  if (!url) return <div className="size-16 shrink-0 rounded-xl bg-superficie-alta" />
 
   return (
     // Son blobs locales, no archivos servidos: next/image no aporta nada acá.
@@ -39,7 +39,7 @@ export function FotoGuardada({ fotoId, alt }: { fotoId: string; alt: string }) {
     <img
       src={url}
       alt={alt}
-      className="h-20 w-20 shrink-0 rounded-lg object-cover"
+      className="size-16 shrink-0 rounded-xl object-cover"
       loading="lazy"
     />
   )

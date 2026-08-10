@@ -16,9 +16,16 @@ import { fileURLToPath } from 'node:url'
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-const FONDO = [0x7b, 0x2d, 0x42] // bordó del encabezado del plan
-const PLATO = [0xf7, 0xf2, 0xf0] // blanco cálido
-const COMIDA = [0xe8, 0xa3, 0x3d] // el naranja de los almidones
+const FONDO = [0x8c, 0x2f, 0x44] // bordó del plan
+const PLATO = [0xfb, 0xf9, 0xf6] // el papel cálido de la app
+
+// Los mismos arcos que dibuja la app: medio plato de almidones, un cuarto de
+// verduras y un cuarto de carne. El icono es el plato de un día cualquiera.
+const ARCOS = [
+  { hasta: 0.5, color: [0xd9, 0x90, 0x2b] },
+  { hasta: 0.75, color: [0x4e, 0x8b, 0x4a] },
+  { hasta: 1, color: [0xd4, 0x66, 0x7a] },
+]
 
 const tablaCrc = (() => {
   const tabla = new Int32Array(256)
@@ -75,8 +82,9 @@ function png(ancho, alto, pixeles) {
 function dibujarIcono(lado) {
   const pixeles = Buffer.alloc(lado * lado * 3)
   const centro = lado / 2
-  const radioPlato = lado * 0.3
-  const radioComida = lado * 0.17
+  const radioExterno = lado * 0.33
+  const radioInterno = lado * 0.23
+  const radioCentro = lado * 0.1
 
   for (let y = 0; y < lado; y++) {
     for (let x = 0; x < lado; x++) {
@@ -85,8 +93,13 @@ function dibujarIcono(lado) {
       const distancia = Math.hypot(dx, dy)
 
       let color = FONDO
-      if (distancia <= radioComida) color = COMIDA
-      else if (distancia <= radioPlato) color = PLATO
+      if (distancia <= radioCentro) {
+        color = PLATO
+      } else if (distancia > radioInterno && distancia <= radioExterno) {
+        // Ángulo normalizado a 0..1 arrancando desde arriba, en sentido horario.
+        const vuelta = (Math.atan2(dy, dx) / (2 * Math.PI) + 1.25) % 1
+        color = ARCOS.find((arco) => vuelta <= arco.hasta).color
+      }
 
       const i = (y * lado + x) * 3
       pixeles[i] = color[0]

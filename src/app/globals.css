@@ -1,57 +1,113 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --superficie: #f6f6f7;
-  --borde: #e6e5e8;
-  --foreground: #171717;
-  --tenue: #6b6a72;
+/*
+ * Los colores de los grupos de alimento salen del plan impreso de la
+ * nutricionista, que dibuja cada plato como un anillo de arcos. Reusarlos hace
+ * que la app y el papel se lean igual.
+ *
+ * Los neutros llevan un sesgo cálido hacia el ocre: un gris puro al lado de esta
+ * paleta se ve apagado.
+ */
 
-  /* Los colores de las categorías del plan salen del PDF de la nutricionista. */
-  --almidones: #e8a33d;
-  --verduras: #4f9d54;
-  --carne: #b03a4a;
-  --proteinas: #3d7ab8;
-  --proteina-vegetal: #7a5cb8;
+:root {
+  --fondo: #fbf9f6;
+  --superficie: #ffffff;
+  --superficie-alta: #f4efe9;
+  --borde: #ebe3da;
+  --tinta: #241e1b;
+  --tinta-suave: #7a6e67;
+  --acento: #8c2f44;
+  --acento-tenue: #f3e6e8;
+
+  --almidones: #d9902b;
+  --verduras: #4e8b4a;
+  --carne: #a8394b;
+  --proteinas: #3b6e96;
+  --vegetal: #7a4e96;
+
+  --sombra: 0 1px 2px rgb(36 30 27 / 0.04), 0 4px 16px rgb(36 30 27 / 0.05);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0d0d0f;
-    --superficie: #17171a;
-    --borde: #2a2a2f;
-    --foreground: #ededed;
-    --tenue: #9d9ca6;
+    --fondo: #14110f;
+    --superficie: #1e1a18;
+    --superficie-alta: #272220;
+    --borde: #322b27;
+    --tinta: #f2ede8;
+    --tinta-suave: #a8998f;
+    --acento: #e08a9c;
+    --acento-tenue: #2e2023;
+
+    /* Subidos en luminosidad: los mismos tonos sobre fondo oscuro se apagan. */
+    --almidones: #e8a94a;
+    --verduras: #6fae6b;
+    --carne: #d4667a;
+    --proteinas: #6fa3cc;
+    --vegetal: #a883cb;
+
+    --sombra: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px rgb(0 0 0 / 0.25);
   }
 }
 
 @theme inline {
-  --color-background: var(--background);
+  --color-fondo: var(--fondo);
   --color-superficie: var(--superficie);
+  --color-superficie-alta: var(--superficie-alta);
   --color-borde: var(--borde);
-  --color-foreground: var(--foreground);
-  --color-tenue: var(--tenue);
+  --color-tinta: var(--tinta);
+  --color-tinta-suave: var(--tinta-suave);
+  --color-acento: var(--acento);
+  --color-acento-tenue: var(--acento-tenue);
   --color-almidones: var(--almidones);
   --color-verduras: var(--verduras);
   --color-carne: var(--carne);
   --color-proteinas: var(--proteinas);
-  --color-proteina-vegetal: var(--proteina-vegetal);
-  --font-sans: var(--font-geist-sans);
+  --color-vegetal: var(--vegetal);
+  --font-display: var(--fuente-display);
+  --font-sans: var(--fuente-cuerpo);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  /* Evita que Safari dispare el pull-to-refresh al scrollear la agenda. */
+  background: var(--fondo);
+  color: var(--tinta);
+  /* Safari dispara el pull-to-refresh al scrollear la agenda si no se contiene. */
   overscroll-behavior-y: contain;
 }
 
-/*
- * iOS hace zoom automático al enfocar cualquier campo con fuente menor a 16px.
- * Es la molestia más citada de las web apps en iPhone, y se arregla acá.
- */
+/* iOS hace zoom automático al enfocar un campo con fuente menor a 16px. */
 input,
 textarea,
 select {
   font-size: 16px;
+}
+
+/* El foco tiene que verse: la app se usa también con teclado en la compu. */
+:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.titulo {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  text-wrap: balance;
+  letter-spacing: -0.01em;
+}
+
+.etiqueta {
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
