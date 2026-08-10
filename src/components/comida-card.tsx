@@ -4,7 +4,12 @@ import { useState } from 'react'
 import { FotoGuardada } from './foto-guardada'
 import { Plato, PuntoCategoria } from './plato'
 import { borrarRegistro } from '@/lib/db'
-import { generarIdeas, type Idea } from '@/lib/gemini'
+import {
+  generarIdeasDeColacion,
+  generarIdeasDelPlato,
+  generarIdeasFijas,
+  type Idea,
+} from '@/lib/gemini'
 import { useClaveGemini } from '@/lib/usar-clave'
 import {
   sugerenciaATexto,
@@ -50,19 +55,24 @@ export function ComidaCard({
   const [error, setError] = useState<string | null>(null)
   const clave = useClaveGemini()
   const registrada = registros.length > 0
-
-  // Gemini solo aporta en los platos: para desayuno, merienda y colaciones el
-  // plan ya nombra la comida entera, no hay nada que inventar.
-  const conIA =
-    contenido.clase === 'plato' && (tipo === 'almuerzo' || tipo === 'cena') && !!clave
+  const conIA = !!clave
 
   async function sugerir() {
     setError(null)
 
-    if (conIA && contenido.clase === 'plato') {
+    if (conIA) {
       setPensando(true)
       try {
-        setIdeas(await generarIdeas(contenido.comida, tipo as 'almuerzo' | 'cena'))
+        // Cada tipo de comida se pide distinto: el almuerzo y la cena se arman
+        // combinando proporciones, mientras que el desayuno y la merienda son
+        // bloques fijos y lo que se busca ahí es variedad dentro del criterio.
+        setIdeas(
+          await (contenido.clase === 'plato'
+            ? generarIdeasDelPlato(contenido.comida, tipo as 'almuerzo' | 'cena')
+            : tipo === 'colacion'
+              ? generarIdeasDeColacion()
+              : generarIdeasFijas(tipo as 'desayuno' | 'merienda')),
+        )
         setSugerencia(null)
       } catch (e) {
         setError(e instanceof Error ? e.message : 'No se pudo generar la idea.')

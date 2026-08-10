@@ -78,6 +78,20 @@ el render, o el prerender y el cliente dan distinto) y **nunca va al repositorio
 Como no hay backend, la llamada sale del navegador con la clave en la URL; está
 dicho explícitamente en Ajustes.
 
+Dos cosas de ese módulo que parecen de más y no lo son. **El modelo no está fijo
+en el código**: se descubre con `ListModels` y se cachea, porque Google renombra
+y retira modelos seguido y un nombre hardcodeado hace que la app tire 404 sin
+explicar por qué (ya pasó). Si el modelo cacheado desaparece, se redescubre y se
+reintenta una vez. **Los errores muestran el mensaje de Google tal cual**: el
+cuerpo de error de la API dice exactamente qué falló, y taparlo con un "revisá la
+conexión" genérico convierte un bug de una línea en una sesión de adivinanzas.
+
+Cada tipo de comida pide las ideas distinto, porque el plan las define distinto:
+almuerzo y cena son proporciones con listas cerradas (combinar sin salirse),
+mientras que desayuno y merienda son bloques fijos, así que ahí lo que se pide es
+variedad dentro del criterio nutricional, apoyándose en la regla del plan que
+autoriza alternarlos entre sí.
+
 ## El plato es el elemento visual, no la decoración
 
 La nutricionista dibuja cada comida como un anillo con arcos de colores según las
