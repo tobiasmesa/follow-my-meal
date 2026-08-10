@@ -18,17 +18,24 @@ import type { ComidaDelDia, ComidaFija } from './types'
  */
 
 const CLAVE = 'gemini-api-key'
-const MODELO_ELEGIDO = 'gemini-modelo'
+const MODELOS_CACHE = 'gemini-modelos'
 const BASE = 'https://generativelanguage.googleapis.com/v1beta'
 
 /**
- * Google viene renombrando los modelos seguido, así que fijar uno en el código
- * es una bomba de tiempo: cuando lo retiran, la app devuelve 404 y no hay forma
- * de saberlo desde acá. En vez de adivinar, se le pregunta a la API qué hay
- * disponible y se elige el primero de esta lista que exista, prefiriendo los
- * más baratos y rápidos.
+ * Google viene renombrando y retirando modelos seguido, así que fijar uno en el
+ * código es una bomba de tiempo. En vez de adivinar se le pregunta a la API qué
+ * hay disponible y se arma una lista ordenada por preferencia: primero los más
+ * baratos, que además son los que tienen cuota en el tier gratuito.
+ *
+ * Se guarda la lista entera y no un solo modelo porque un 429 no distingue
+ * entre "consultaste muy seguido" y "este modelo tiene cuota cero para tu
+ * clave". Ante la duda se prueba el siguiente en vez de dar por perdida la
+ * consulta.
  */
-const PREFERIDOS = ['flash-lite', 'flash', 'pro']
+const PREFERIDOS = ['flash-lite', 'flash']
+
+/** Cuántos modelos probar antes de darse por vencido. */
+const INTENTOS = 3
 
 // El localStorage es un sistema externo a React: se lee con useSyncExternalStore
 // (ver `usar-clave.ts`) y por eso hace falta avisar cuando cambia.
@@ -50,8 +57,8 @@ export function guardarClave(clave: string): void {
   const limpia = clave.trim()
   if (limpia) window.localStorage.setItem(CLAVE, limpia)
   else window.localStorage.removeItem(CLAVE)
-  // El modelo se descubre por clave, así que al cambiarla hay que redescubrirlo.
-  window.localStorage.removeItem(MODELO_ELEGIDO)
+  // Los modelos se descubren por clave, así que al cambiarla hay que rehacerlo.
+  window.localStorage.removeItem(MODELOS_CACHE)
   for (const avisar of oyentes) avisar()
 }
 
@@ -77,14 +84,23 @@ function traducirError(respuesta: Response, motivo: string): Error {
     return new Error(`La clave no funciona. ${motivo}`)
   }
   if (respuesta.status === 429) {
-    return new Error('Gemini está limitando las consultas. Probá en un rato.')
+    // Google distingue "muy seguido" de "no tenés cuota" solo en el texto, así
+    // que se pasa tal cual en vez de resumirlo mal.
+    return new Error(`Gemini rechazó la consulta por cuota. ${motivo}`)
   }
   return new Error(motivo)
 }
 
-async function descubrirModelo(clave: string): Promise<string> {
-  const guardado = window.localStorage.getItem(MODELO_ELEGIDO)
-  if (guardado) return guardado
+async function descubrirModelos(clave: string): Promise<string[]> {
+  const guardados = window.localStorage.getItem(MODELOS_CACHE)
+  if (guardados) {
+    try {
+      const lista = JSON.parse(guardados)
+      if (Array.isArray(lista) && lista.length) return lista
+    } catch {
+      // Cache corrupto: se redescubre.
+    }
+  }
 
   const respuesta = await fetch(`${BASE}/models?key=${encodeURIComponent(clave)}`)
   if (!respuesta.ok) {
@@ -95,17 +111,22 @@ async function descubrirModelo(clave: string): Promise<string> {
   const utiles: string[] = (Array.isArray(models) ? models : [])
     .filter((m) => m?.supportedGenerationMethods?.includes('generateContent'))
     .map((m) => String(m.name).replace(/^models\//, ''))
-    // Las variantes experimentales y de vista previa cambian sin aviso.
-    .filter((n: string) => !/preview|exp|thinking|image|tts|embedding/i.test(n))
+    // Las variantes experimentales y de vista previa cambian sin aviso, y las
+    // que no son de texto no sirven acá.
+    .filter((n: string) => !/preview|exp|thinking|image|tts|embedding|vision/i.test(n))
 
-  const elegido =
-    PREFERIDOS.map((pista) => utiles.find((n) => n.includes(pista))).find(Boolean) ??
-    utiles[0]
+  // Los preferidos primero, en orden, y el resto detrás por si no hay ninguno.
+  const preferidos = PREFERIDOS.flatMap((pista) =>
+    utiles.filter((n) => n.includes(pista)),
+  )
+  const ordenados = [...new Set([...preferidos, ...utiles])]
 
-  if (!elegido) throw new Error('Tu clave no tiene ningún modelo de texto habilitado.')
+  if (!ordenados.length) {
+    throw new Error('Tu clave no tiene ningún modelo de texto habilitado.')
+  }
 
-  window.localStorage.setItem(MODELO_ELEGIDO, elegido)
-  return elegido
+  window.localStorage.setItem(MODELOS_CACHE, JSON.stringify(ordenados))
+  return ordenados
 }
 
 const ESQUEMA = {
@@ -143,17 +164,28 @@ async function pedirIdeas(prompt: string): Promise<Idea[]> {
       }),
     })
 
-  let respuesta = await llamar(await descubrirModelo(clave))
+  const modelos = await descubrirModelos(clave)
+  let respuesta: Response | null = null
+  let ultimoFallo: Error | null = null
 
-  // Si el modelo cacheado ya no existe, se redescubre y se reintenta una vez.
-  if (respuesta.status === 404) {
-    window.localStorage.removeItem(MODELO_ELEGIDO)
-    respuesta = await llamar(await descubrirModelo(clave))
+  for (const modelo of modelos.slice(0, INTENTOS)) {
+    const intento = await llamar(modelo)
+    if (intento.ok) {
+      respuesta = intento
+      break
+    }
+
+    const motivo = await motivoDelError(intento)
+    ultimoFallo = traducirError(intento, motivo)
+
+    // 404 es un modelo retirado y 429 puede ser cuota cero en este modelo
+    // puntual: en los dos casos vale la pena probar el siguiente. Cualquier
+    // otro error (clave inválida, por ejemplo) no mejora cambiando de modelo.
+    if (intento.status === 404) window.localStorage.removeItem(MODELOS_CACHE)
+    else if (intento.status !== 429) throw ultimoFallo
   }
 
-  if (!respuesta.ok) {
-    throw traducirError(respuesta, await motivoDelError(respuesta))
-  }
+  if (!respuesta) throw ultimoFallo ?? new Error('No se pudo consultar a Gemini.')
 
   const datos = await respuesta.json()
   const texto = datos?.candidates?.[0]?.content?.parts?.[0]?.text

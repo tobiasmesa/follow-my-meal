@@ -78,13 +78,21 @@ el render, o el prerender y el cliente dan distinto) y **nunca va al repositorio
 Como no hay backend, la llamada sale del navegador con la clave en la URL; está
 dicho explícitamente en Ajustes.
 
-Dos cosas de ese módulo que parecen de más y no lo son. **El modelo no está fijo
-en el código**: se descubre con `ListModels` y se cachea, porque Google renombra
-y retira modelos seguido y un nombre hardcodeado hace que la app tire 404 sin
-explicar por qué (ya pasó). Si el modelo cacheado desaparece, se redescubre y se
-reintenta una vez. **Los errores muestran el mensaje de Google tal cual**: el
-cuerpo de error de la API dice exactamente qué falló, y taparlo con un "revisá la
-conexión" genérico convierte un bug de una línea en una sesión de adivinanzas.
+Dos cosas de ese módulo que parecen de más y no lo son, las dos aprendidas
+rompiendo la app en producción.
+
+**Los modelos no están fijos en el código.** Se descubren con `ListModels` y se
+guarda la lista entera ordenada por preferencia. Google renombra y retira modelos
+seguido, y un nombre hardcodeado hace que la app tire 404 sin poder explicarse. Se
+guarda la lista y no un solo modelo porque un 429 no distingue entre "consultaste
+muy seguido" y "este modelo tiene cuota cero para tu clave": ante 404 o 429 se
+prueba el siguiente, hasta tres. Un 400 o 403, en cambio, no mejora cambiando de
+modelo, así que corta ahí.
+
+**Los errores muestran el mensaje de Google tal cual.** El cuerpo de error de la
+API dice exactamente qué falló; taparlo con un "revisá la conexión" genérico
+convierte un bug de una línea en una sesión de adivinanzas. Si agregás un caso
+nuevo, pasá el motivo, no lo resumas.
 
 Cada tipo de comida pide las ideas distinto, porque el plan las define distinto:
 almuerzo y cena son proporciones con listas cerradas (combinar sin salirse),
