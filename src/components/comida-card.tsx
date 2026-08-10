@@ -4,9 +4,12 @@ import { useState } from 'react'
 import { FotoGuardada } from './foto-guardada'
 import { Plato, PuntoCategoria } from './plato'
 import { borrarRegistro } from '@/lib/db'
+import { generarIdeas, type Idea } from '@/lib/gemini'
+import { useClaveGemini } from '@/lib/usar-clave'
 import {
   sugerenciaATexto,
   sugerirComidaFija,
+  sugerirDeLista,
   sugerirPlato,
   type Sugerencia,
 } from '@/lib/sugerencias'
@@ -42,23 +45,39 @@ export function ComidaCard({
   onCambio: () => void
 }) {
   const [sugerencia, setSugerencia] = useState<Sugerencia | null>(null)
+  const [ideas, setIdeas] = useState<Idea[] | null>(null)
+  const [pensando, setPensando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const clave = useClaveGemini()
   const registrada = registros.length > 0
 
-  function sugerir() {
-    if (contenido.clase === 'plato') setSugerencia(sugerirPlato(contenido.comida))
+  // Gemini solo aporta en los platos: para desayuno, merienda y colaciones el
+  // plan ya nombra la comida entera, no hay nada que inventar.
+  const conIA =
+    contenido.clase === 'plato' && (tipo === 'almuerzo' || tipo === 'cena') && !!clave
+
+  async function sugerir() {
+    setError(null)
+
+    if (conIA && contenido.clase === 'plato') {
+      setPensando(true)
+      try {
+        setIdeas(await generarIdeas(contenido.comida, tipo as 'almuerzo' | 'cena'))
+        setSugerencia(null)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'No se pudo generar la idea.')
+      } finally {
+        setPensando(false)
+      }
+      return
+    }
+
+    setIdeas(null)
+    if (contenido.clase === 'plato')
+      setSugerencia(sugerirPlato(contenido.comida, sugerencia))
     else if (contenido.clase === 'bloques')
-      setSugerencia(sugerirComidaFija(contenido.comida))
-    else
-      setSugerencia({
-        partes: [
-          {
-            porcion: '',
-            eleccion:
-              contenido.opciones[Math.floor(Math.random() * contenido.opciones.length)],
-          },
-        ],
-        extras: [],
-      })
+      setSugerencia(sugerirComidaFija(contenido.comida, sugerencia))
+    else setSugerencia(sugerirDeLista(contenido.opciones, sugerencia))
   }
 
   return (
@@ -101,6 +120,23 @@ export function ComidaCard({
             {sugerenciaATexto(sugerencia)}
           </p>
         )}
+
+        {ideas && ideas.length > 0 && (
+          <ul className="mt-3 space-y-2">
+            {ideas.map((idea, i) => (
+              <li key={i} className="rounded-xl bg-superficie-alta px-3.5 py-3">
+                <p className="titulo text-[15px] leading-snug font-semibold">
+                  {idea.titulo}
+                </p>
+                <p className="mt-1 text-[13px] leading-relaxed text-tinta-suave">
+                  {idea.comoArmarlo}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {error && <p className="mt-3 text-[13px] text-acento">{error}</p>}
       </div>
 
       {registros.length > 0 && (
@@ -149,9 +185,10 @@ export function ComidaCard({
         <button
           type="button"
           onClick={sugerir}
-          className="flex-1 py-3 text-sm text-tinta-suave transition-colors hover:bg-superficie-alta"
+          disabled={pensando}
+          className="flex-1 py-3 text-sm text-tinta-suave transition-colors hover:bg-superficie-alta disabled:opacity-60"
         >
-          Sugerir
+          {pensando ? 'Pensando…' : conIA ? 'Dame ideas' : 'Sugerir'}
         </button>
         <button
           type="button"

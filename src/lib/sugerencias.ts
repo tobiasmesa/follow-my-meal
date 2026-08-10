@@ -1,49 +1,76 @@
 import type { ComidaDelDia, ComidaFija } from './types'
 
 /**
- * Arma una sugerencia concreta eligiendo una opción de cada componente.
+ * Sugerencia local: elige una opción de cada componente del plato.
  *
- * No hace falta IA para esto: el plan ya trae, para cada renglón del plato, la
- * lista de lo que se puede comer. Sugerir es combinar. Sale instantáneo, funciona
- * sin internet y no manda tus datos a ningún lado.
+ * No hace falta IA para esto — el plan ya trae, para cada renglón, la lista de
+ * lo que se puede comer. Es instantáneo, funciona sin internet y sin API key, y
+ * es lo que se usa cuando no hay clave de Gemini cargada.
+ *
+ * Recibe la sugerencia anterior para no repetirla: con listas cortas (la carne
+ * magra tiene cuatro opciones) tocar "Sugerir" varias veces devolvía lo mismo
+ * una y otra vez.
  */
 
-function alAzar<T>(opciones: T[]): T {
-  return opciones[Math.floor(Math.random() * opciones.length)]
+function alAzarDistinto(opciones: string[], evitar?: string): string {
+  const posibles =
+    opciones.length > 1 && evitar ? opciones.filter((o) => o !== evitar) : opciones
+  return posibles[Math.floor(Math.random() * posibles.length)]
 }
 
 export interface Sugerencia {
   partes: { porcion: string; eleccion: string; nota?: string }[]
   extras: string[]
+  /** Texto libre cuando la sugerencia viene de Gemini en vez de la combinatoria. */
+  idea?: string
 }
 
-export function sugerirPlato(comida: ComidaDelDia): Sugerencia {
+export function sugerirPlato(
+  comida: ComidaDelDia,
+  anterior?: Sugerencia | null,
+): Sugerencia {
   const extras: string[] = []
   if (comida.fruta) extras.push('1 fruta')
   if (comida.bebida) extras.push('1 vaso de agua')
 
   return {
-    partes: comida.componentes.map((c) => ({
-      porcion: c.porcion,
-      eleccion: alAzar(c.opciones),
-      nota: c.nota,
+    partes: comida.componentes.map((componente, i) => ({
+      porcion: componente.porcion,
+      eleccion: alAzarDistinto(componente.opciones, anterior?.partes[i]?.eleccion),
+      nota: componente.nota,
     })),
     extras,
   }
 }
 
-export function sugerirComidaFija(comida: ComidaFija): Sugerencia {
+export function sugerirComidaFija(
+  comida: ComidaFija,
+  anterior?: Sugerencia | null,
+): Sugerencia {
   return {
-    partes: comida.bloques.map((opciones) => ({
+    partes: comida.bloques.map((opciones, i) => ({
       porcion: '',
-      eleccion: alAzar(opciones),
+      eleccion: alAzarDistinto(opciones, anterior?.partes[i]?.eleccion),
     })),
     extras: [],
   }
 }
 
-/** Una línea de texto, para copiar o compartir. */
+export function sugerirDeLista(
+  opciones: string[],
+  anterior?: Sugerencia | null,
+): Sugerencia {
+  return {
+    partes: [
+      { porcion: '', eleccion: alAzarDistinto(opciones, anterior?.partes[0]?.eleccion) },
+    ],
+    extras: [],
+  }
+}
+
+/** Una línea de texto, para mostrar o copiar. */
 export function sugerenciaATexto(sugerencia: Sugerencia): string {
+  if (sugerencia.idea) return sugerencia.idea
   const partes = sugerencia.partes.map((p) =>
     p.porcion ? `${p.porcion}: ${p.eleccion}` : p.eleccion,
   )

@@ -2,11 +2,20 @@
 
 import { useEffect, useState } from 'react'
 import { exportarTodo, todosLosRegistros } from '@/lib/db'
+import { guardarClave } from '@/lib/gemini'
+import { useClaveGemini } from '@/lib/usar-clave'
 import { PLAN } from '@/lib/plan'
 
 export default function Ajustes() {
   const [cantidad, setCantidad] = useState<number | null>(null)
   const [exportando, setExportando] = useState(false)
+  const [guardada, setGuardada] = useState(false)
+
+  // El campo muestra lo guardado hasta que el usuario empieza a escribir; desde
+  // ahí manda el borrador.
+  const almacenada = useClaveGemini()
+  const [borrador, setBorrador] = useState<string | null>(null)
+  const clave = borrador ?? almacenada ?? ''
 
   useEffect(() => {
     todosLosRegistros().then((r) => setCantidad(r.length))
@@ -59,6 +68,49 @@ export default function Ajustes() {
             El archivo lleva las fotos adentro. Sirve de respaldo, para mandarle el
             seguimiento a la nutricionista, y para mudar los datos si algún día la app
             pasa a tener cuenta.
+          </p>
+        </Bloque>
+
+        <Bloque titulo="Ideas de comida">
+          <p className="text-[15px] leading-relaxed">
+            Con una clave de Gemini, el botón del almuerzo y la cena pasa de sugerirte
+            ingredientes sueltos a proponerte comidas armadas. Sin clave la app funciona
+            igual, con las sugerencias que salen del plan.
+          </p>
+
+          <label className="etiqueta mt-4 mb-1.5 block" htmlFor="clave">
+            Clave de Gemini
+          </label>
+          <input
+            id="clave"
+            type="password"
+            value={clave}
+            onChange={(e) => {
+              setBorrador(e.target.value)
+              setGuardada(false)
+            }}
+            placeholder="Pegala acá"
+            autoComplete="off"
+            spellCheck={false}
+            className="w-full rounded-xl border border-borde bg-superficie-alta px-3.5 py-2.5 outline-none placeholder:text-tinta-suave/60 focus:border-acento"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              guardarClave(clave)
+              setBorrador(null)
+              setGuardada(true)
+            }}
+            className="mt-2.5 w-full rounded-xl border border-borde py-2.5 text-sm font-medium transition-colors hover:bg-superficie-alta"
+          >
+            {guardada ? 'Guardada' : 'Guardar clave'}
+          </button>
+
+          <p className="mt-3 text-[13px] leading-relaxed text-tinta-suave">
+            Se guarda en este dispositivo y no sale de acá salvo cuando consulta a
+            Google. Como la app no tiene servidor, la clave viaja desde el navegador:
+            usá una clave dedicada a esto y borrala si prestás el teléfono. En el tier
+            gratuito, Google usa lo que le mandás para entrenar sus modelos.
           </p>
         </Bloque>
 

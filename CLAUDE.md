@@ -67,8 +67,16 @@ veces al año costaba más de lo que ahorraba. Cuando haya plan nuevo, se reempl
 ese archivo. No incluye nombre ni peso: la app no los necesita y así los datos de
 salud identificables no quedan en el repositorio.
 
-Las sugerencias (`src/lib/sugerencias.ts`) salen de combinar una opción de cada
-componente. Tampoco necesitan IA: el plan ya trae las listas, sugerir es combinar.
+Las sugerencias tienen dos niveles. `src/lib/sugerencias.ts` combina una opción de
+cada componente y no necesita nada: el plan ya trae las listas, sugerir es
+combinar. `src/lib/gemini.ts` es opcional y va un paso más allá — con una clave
+cargada desde Ajustes, propone comidas armadas en vez de ingredientes sueltos.
+Sin clave la app funciona igual y ni se entera.
+
+La clave vive en `localStorage`, se lee con `useClaveGemini()` (nunca directo en
+el render, o el prerender y el cliente dan distinto) y **nunca va al repositorio**.
+Como no hay backend, la llamada sale del navegador con la clave en la URL; está
+dicho explícitamente en Ajustes.
 
 ## El plato es el elemento visual, no la decoración
 
@@ -104,10 +112,17 @@ desmontar, o los blobs quedan retenidos en memoria.
 **PWA en iOS.** Safari ignora los iconos del manifest para la pantalla de inicio:
 el que usa es `src/app/apple-icon.png` (180×180). El `appleWebApp` de la metadata
 en `layout.tsx` es lo que evita que la app instalada abra con la barra de Safari.
-En modo standalone no hay botón de atrás, así que la navegación se banca sola con
-la barra inferior, que lleva `env(safe-area-inset-bottom)` para no quedar debajo
-del indicador de home. Ningún input puede tener `font-size` menor a 16px o iOS
-hace zoom solo al tocarlo (está puesto en `globals.css`).
+
+Con `viewportFit: 'cover'` el contenido llega hasta los bordes físicos, así que
+los insets son obligatorios y no decorativos: sin `env(safe-area-inset-top)` en
+`main`, el título queda tapado por el reloj y la batería. La barra inferior es
+`fixed`, no `sticky` — como tab bar, sticky se despega al scrollear con inercia
+en iOS y salta al tope antes de reacomodarse. Por ser fixed, `main` reserva su
+alto abajo con `--alto-nav`.
+
+En modo standalone no hay botón de atrás, así que la navegación se banca sola.
+Ningún input puede tener `font-size` menor a 16px o iOS hace zoom solo al tocarlo
+(está puesto en `globals.css`).
 
 **Nada de service worker.** No hace falta para que la app sea instalable, y
 cachear rutas con datos del día es la causa más común de "me muestra lo de ayer".

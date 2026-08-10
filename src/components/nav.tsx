@@ -22,8 +22,10 @@ export function Nav() {
   const ruta = usePathname()
 
   return (
+    // `fixed` y no `sticky`: como barra de pestañas, sticky se despega al
+    // scrollear con inercia en iOS y salta al tope antes de reacomodarse.
     <nav
-      className="sticky bottom-0 z-10 border-t border-borde bg-fondo/85 backdrop-blur-md"
+      className="fixed inset-x-0 bottom-0 z-10 border-t border-borde bg-fondo/85 backdrop-blur-md"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <ul className="mx-auto flex max-w-md">

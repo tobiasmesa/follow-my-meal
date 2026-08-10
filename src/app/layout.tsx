@@ -42,9 +42,23 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="es-AR" className={`${display.variable} ${cuerpo.variable} h-full`}>
-      <body className="flex min-h-full flex-col font-sans antialiased">
-        <main className="mx-auto w-full max-w-md flex-1 px-4 pb-8">{children}</main>
+    <html lang="es-AR" className={`${display.variable} ${cuerpo.variable}`}>
+      <body className="font-sans antialiased">
+        {/*
+          Instalada en iOS la app ocupa toda la pantalla, así que sin el inset
+          de arriba el título queda debajo del reloj y la batería. Abajo se
+          reserva el alto de la barra, que es fixed.
+        */}
+        <main
+          className="mx-auto w-full max-w-md px-4"
+          style={{
+            paddingTop: 'env(safe-area-inset-top)',
+            paddingBottom:
+              'calc(var(--alto-nav) + env(safe-area-inset-bottom) + 1.5rem)',
+          }}
+        >
+          {children}
+        </main>
         <Nav />
       </body>
     </html>

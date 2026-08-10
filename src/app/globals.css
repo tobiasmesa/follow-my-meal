@@ -26,6 +26,10 @@
   --vegetal: #7a4e96;
 
   --sombra: 0 1px 2px rgb(36 30 27 / 0.04), 0 4px 16px rgb(36 30 27 / 0.05);
+
+  /* Alto de la barra inferior. El contenido reserva este espacio abajo porque
+     la barra es fixed y si no le pasa por debajo. */
+  --alto-nav: 3.5rem;
 }
 
 @media (prefers-color-scheme: dark) {

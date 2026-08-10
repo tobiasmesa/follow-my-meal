@@ -11,7 +11,15 @@ import { liberarUrl, urlDeFoto } from '@/lib/foto'
  * que la limpieza del efecto no es opcional: sin ella, scrollear el historial
  * va acumulando imágenes que nunca se sueltan.
  */
-export function FotoGuardada({ fotoId, alt }: { fotoId: string; alt: string }) {
+export function FotoGuardada({
+  fotoId,
+  alt,
+  className = 'size-16 shrink-0 rounded-xl object-cover',
+}: {
+  fotoId: string
+  alt: string
+  className?: string
+}) {
   const [url, setUrl] = useState<string | null>(null)
 
   useEffect(() => {
@@ -31,16 +39,11 @@ export function FotoGuardada({ fotoId, alt }: { fotoId: string; alt: string }) {
     }
   }, [fotoId])
 
-  if (!url) return <div className="size-16 shrink-0 rounded-xl bg-superficie-alta" />
+  if (!url) return <div className={`${className} bg-superficie-alta`} />
 
   return (
     // Son blobs locales, no archivos servidos: next/image no aporta nada acá.
     // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={url}
-      alt={alt}
-      className="size-16 shrink-0 rounded-xl object-cover"
-      loading="lazy"
-    />
+    <img src={url} alt={alt} className={className} loading="lazy" />
   )
 }
