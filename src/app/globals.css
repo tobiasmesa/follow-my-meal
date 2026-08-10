@@ -2,25 +2,56 @@
 
 :root {
   --background: #ffffff;
+  --superficie: #f6f6f7;
+  --borde: #e6e5e8;
   --foreground: #171717;
-}
+  --tenue: #6b6a72;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Los colores de las categorías del plan salen del PDF de la nutricionista. */
+  --almidones: #e8a33d;
+  --verduras: #4f9d54;
+  --carne: #b03a4a;
+  --proteinas: #3d7ab8;
+  --proteina-vegetal: #7a5cb8;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #0d0d0f;
+    --superficie: #17171a;
+    --borde: #2a2a2f;
     --foreground: #ededed;
+    --tenue: #9d9ca6;
   }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-superficie: var(--superficie);
+  --color-borde: var(--borde);
+  --color-foreground: var(--foreground);
+  --color-tenue: var(--tenue);
+  --color-almidones: var(--almidones);
+  --color-verduras: var(--verduras);
+  --color-carne: var(--carne);
+  --color-proteinas: var(--proteinas);
+  --color-proteina-vegetal: var(--proteina-vegetal);
+  --font-sans: var(--font-geist-sans);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Evita que Safari dispare el pull-to-refresh al scrollear la agenda. */
+  overscroll-behavior-y: contain;
+}
+
+/*
+ * iOS hace zoom automático al enfocar cualquier campo con fuente menor a 16px.
+ * Es la molestia más citada de las web apps en iPhone, y se arregla acá.
+ */
+input,
+textarea,
+select {
+  font-size: 16px;
 }
